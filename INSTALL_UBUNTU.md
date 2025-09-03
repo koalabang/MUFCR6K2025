@@ -104,7 +104,7 @@ apt search libffi | grep dev
 
 ### 1. Cloner le projet
 ```bash
-git clone <url-du-projet>
+git clone https://github.com/koalabang/MUFCR6K2025.git
 cd MUFCR6K2025
 ```
 
@@ -286,23 +286,60 @@ sudo netstat -tlnp | grep :8080
 
 ### Problèmes courants
 
-3. **Port déjà utilisé**
+3. **Erreur 203/EXEC - Service ne démarre pas**
+   ```bash
+   # Vérifier les permissions du fichier uvicorn
+   ls -la /opt/mufmonitor/venv/bin/uvicorn
+   sudo chmod +x /opt/mufmonitor/venv/bin/uvicorn
+   
+   # Vérifier que l'environnement virtuel est correct
+   sudo -u mufmonitor /opt/mufmonitor/venv/bin/python --version
+   
+   # Recréer l'environnement virtuel si nécessaire
+   sudo rm -rf /opt/mufmonitor/venv
+   sudo -u mufmonitor python3 -m venv /opt/mufmonitor/venv
+   sudo -u mufmonitor /opt/mufmonitor/venv/bin/pip install -r /opt/mufmonitor/requirements.txt
+   
+   # Redémarrer le service
+   sudo systemctl daemon-reload
+   sudo systemctl restart mufmonitor
+   ```
+
+4. **Port déjà utilisé**
    ```bash
    sudo lsof -i :8080
    sudo systemctl stop mufmonitor
    ```
 
-4. **Permissions insuffisantes**
+5. **Permissions insuffisantes**
    ```bash
    sudo chown -R mufmonitor:mufmonitor /opt/mufmonitor
    sudo chmod +x /opt/mufmonitor/venv/bin/uvicorn
+   sudo chmod +x /opt/mufmonitor/venv/bin/python
    ```
 
-5. **Dépendances manquantes**
+6. **Dépendances manquantes**
    ```bash
    source /opt/mufmonitor/venv/bin/activate
    pip install --upgrade -r requirements.txt
    ```
+
+### Diagnostic avancé pour erreur 203/EXEC
+
+```bash
+# Tester manuellement l'exécution
+sudo -u mufmonitor /opt/mufmonitor/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8080
+
+# Vérifier les logs détaillés
+sudo journalctl -u mufmonitor -f --no-pager
+
+# Vérifier la structure des fichiers
+ls -la /opt/mufmonitor/
+ls -la /opt/mufmonitor/venv/bin/
+
+# Tester l'importation Python
+sudo -u mufmonitor /opt/mufmonitor/venv/bin/python -c "import app.main; print('Import OK')"
+```
 
 ### Test de l'installation
 ```bash
