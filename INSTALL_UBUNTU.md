@@ -300,10 +300,39 @@ sudo netstat -tlnp | grep :8080
    sudo chown -R mufmonitor:mufmonitor /opt/mufmonitor
 
    # Test immédiat
-   sudo -u mufmonitor /opt/mufmonitor/venv/bin/uvicorn --version
-   ```
+    sudo -u mufmonitor /opt/mufmonitor/venv/bin/uvicorn --version
+    ```
 
-   **Si le problème persiste, diagnostic complet :**
+    **Si "Permission denied" persiste après chmod +x, solution avancée :**
+
+    ```bash
+    # Vérifier le type de fichier uvicorn
+    file /opt/mufmonitor/venv/bin/uvicorn
+    ls -la /opt/mufmonitor/venv/bin/uvicorn
+    
+    # Réinstaller uvicorn complètement
+    sudo -u mufmonitor /opt/mufmonitor/venv/bin/pip uninstall -y uvicorn
+    sudo -u mufmonitor /opt/mufmonitor/venv/bin/pip install uvicorn[standard]
+    
+    # Forcer les permissions après réinstallation
+    sudo chmod 755 /opt/mufmonitor/venv/bin/uvicorn
+    sudo chown mufmonitor:mufmonitor /opt/mufmonitor/venv/bin/uvicorn
+    
+    # Test final
+    sudo -u mufmonitor /opt/mufmonitor/venv/bin/uvicorn --version
+    
+    # Si ça ne marche toujours pas, recréer l'environnement virtuel
+    if [ $? -ne 0 ]; then
+        echo "Recréation complète de l'environnement virtuel..."
+        sudo rm -rf /opt/mufmonitor/venv
+        sudo -u mufmonitor python3 -m venv /opt/mufmonitor/venv
+        sudo -u mufmonitor /opt/mufmonitor/venv/bin/pip install --upgrade pip
+        sudo -u mufmonitor /opt/mufmonitor/venv/bin/pip install -r /opt/mufmonitor/requirements.txt
+        sudo chmod 755 /opt/mufmonitor/venv/bin/*
+    fi
+    ```
+
+    **Si le problème persiste encore, diagnostic complet :**
 
    ```bash
    # Vérifier les permissions sur tous les binaires de l'environnement virtuel
