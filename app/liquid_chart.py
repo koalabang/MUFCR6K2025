@@ -174,18 +174,12 @@ def create_muf_liquid_dashboard(data: MUFData) -> str:
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-                <h3 class="text-center mb-4">MUF Actuel - Stations Espagnoles</h3>
+                <h3 class="text-center mb-4">MUF Actuel - EA Iono Sonde</h3>
             </div>
         </div>
         <div class="row">
             {charts_html}
         </div>
-        <div class="row">
-            <div class="col-12 text-center">
-                <small class="text-muted">
-                    Dernière mise à jour: {data.ts.strftime('%d/%m/%Y %H:%M:%S UTC') if data.ts else 'N/A'}
-                </small>
-            </div>
-        </div>
+
     </div>
     """

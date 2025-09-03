@@ -53,45 +53,29 @@ def create_muf_chart(series: MUFSeries, dark_mode: bool = False) -> Line:
             series_name="Roquetes",
             y_axis=roquetes_rounded,
             is_symbol_show=False,
-            linestyle_opts=opts.LineStyleOpts(width=2),
+            linestyle_opts=opts.LineStyleOpts(width=4),
             itemstyle_opts=opts.ItemStyleOpts(color="#1f77b4"),
             label_opts=opts.LabelOpts(is_show=False),
-            areastyle_opts=opts.AreaStyleOpts(
-                opacity=0.6,
-                color="#1f77b4"
-            ),
-            stack="stack1",
         )
         .add_yaxis(
             series_name="Arenosillo",
             y_axis=arenosillo_rounded,
             is_symbol_show=False,
-            linestyle_opts=opts.LineStyleOpts(width=2),
+            linestyle_opts=opts.LineStyleOpts(width=4),
             itemstyle_opts=opts.ItemStyleOpts(color="#ff7f0e"),
             label_opts=opts.LabelOpts(is_show=False),
-            areastyle_opts=opts.AreaStyleOpts(
-                opacity=0.6,
-                color="#ff7f0e"
-            ),
-            stack="stack1",
         )
         .add_yaxis(
             series_name="Moyenne",
             y_axis=avg_rounded,
             is_symbol_show=False,
-            linestyle_opts=opts.LineStyleOpts(width=3),
+            linestyle_opts=opts.LineStyleOpts(width=5),
             itemstyle_opts=opts.ItemStyleOpts(color="#2ca02c"),
             label_opts=opts.LabelOpts(is_show=False),
-            areastyle_opts=opts.AreaStyleOpts(
-                opacity=0.6,
-                color="#2ca02c"
-            ),
-            stack="stack1",
         )
         .set_global_opts(
             title_opts=opts.TitleOpts(
-                title="MUF (3000 km) - Stations Espagnoles",
-                subtitle=f"Dernière mise à jour: {datetime.now().strftime('%H:%M:%S UTC')}",
+                title="MUF (3000 km) - EA Iono Sonde",
                 title_textstyle_opts=opts.TextStyleOpts(color=title_color),
                 subtitle_textstyle_opts=opts.TextStyleOpts(color=text_color)
             ),
@@ -117,7 +101,6 @@ def create_muf_chart(series: MUFSeries, dark_mode: bool = False) -> Line:
                 type_="value",
                 name="MUF (MHz)",
                 min_=0,
-                max_=50,
                 splitline_opts=opts.SplitLineOpts(is_show=True, linestyle_opts=opts.LineStyleOpts(color=grid_color)),
                 axislabel_opts=opts.LabelOpts(color=text_color),
                 name_textstyle_opts=opts.TextStyleOpts(color=text_color),
