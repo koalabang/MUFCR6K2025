@@ -332,6 +332,43 @@ sudo netstat -tlnp | grep :8080
     fi
     ```
 
+    **Si pip lui-même a des problèmes de permissions :**
+
+    ```bash
+    # Diagnostic des permissions sur l'environnement virtuel
+    ls -la /opt/mufmonitor/venv/bin/
+    
+    # Recréation forcée de l'environnement virtuel
+    echo "Environnement virtuel corrompu - recréation complète..."
+    sudo rm -rf /opt/mufmonitor/venv
+    
+    # Créer un nouvel environnement virtuel
+    sudo -u mufmonitor python3 -m venv /opt/mufmonitor/venv
+    
+    # Vérifier que la création a réussi
+    if [ ! -f "/opt/mufmonitor/venv/bin/python" ]; then
+        echo "Erreur: Impossible de créer l'environnement virtuel"
+        exit 1
+    fi
+    
+    # Forcer les permissions sur tous les binaires
+    sudo chmod 755 /opt/mufmonitor/venv/bin/*
+    sudo chown -R mufmonitor:mufmonitor /opt/mufmonitor/venv
+    
+    # Mettre à jour pip
+    sudo -u mufmonitor /opt/mufmonitor/venv/bin/python -m pip install --upgrade pip
+    
+    # Installer les dépendances
+    sudo -u mufmonitor /opt/mufmonitor/venv/bin/pip install -r /opt/mufmonitor/requirements.txt
+    
+    # Vérifier l'installation d'uvicorn
+    sudo -u mufmonitor /opt/mufmonitor/venv/bin/uvicorn --version
+    
+    # Redémarrer le service
+    sudo systemctl restart mufmonitor
+    sudo systemctl status mufmonitor
+    ```
+
     **Si le problème persiste encore, diagnostic complet :**
 
    ```bash
