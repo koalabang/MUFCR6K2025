@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUF Monitor - Ionosondes Espagnoles</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .muf-card { 
+            transition: transform 0.2s; 
+            background: rgba(255, 255, 255, 0.95);
+        }
+        .muf-card:hover { transform: translateY(-2px); }
+        .muf-value { font-size: 2em; font-weight: bold; }
+        .mhz-unit { font-size: 0.7em; color: #6c757d; }
+        
+        /* Centrage automatique des bulles dans les cartes */
+        .card-body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            overflow: hidden;
+        }
+        
+        .card-body iframe {
+            display: block;
+            margin: 0 auto;
+            overflow: hidden;
+            scrolling: no;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        
+        .theme-toggle:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Mode sombre */
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .muf-card {
+            background: rgba(30, 30, 30, 0.95);
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .card-header {
+            background-color: rgba(40, 40, 40, 0.9) !important;
+            border-bottom: 1px solid #404040;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .card {
+            background-color: rgba(30, 30, 30, 0.95) !important;
+            border: 1px solid #404040 !important;
+        }
+        
+        body.dark-mode .card-body {
+            background-color: rgba(25, 25, 25, 0.95) !important;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .alert {
+            background-color: rgba(40, 40, 40, 0.9) !important;
+            border-color: #404040 !important;
+            color: #e0e0e0 !important;
+        }
+        
+        body.dark-mode .btn-outline-primary {
+            color: #e0e0e0;
+            border-color: #667eea;
+        }
+        
+        body.dark-mode .btn-outline-primary:hover {
+            background-color: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+        
+        body.dark-mode .theme-toggle {
+            background: rgba(50, 50, 50, 0.9);
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .theme-toggle:hover {
+            background: #404040;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode h1 {
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .text-muted {
+            color: #adb5bd !important;
+        }
+        
+        body.dark-mode h5 {
+            color: #e0e0e0 !important;
+        }
+        
+        /* Styles pour les spots DX */
+        .dx-spot {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: rgba(248, 249, 250, 0.8);
+            border-radius: 6px;
+            border-left: 3px solid #007bff;
+            transition: all 0.2s ease;
+        }
+        
+        .dx-spot:hover {
+            background: rgba(248, 249, 250, 1);
+            transform: translateX(2px);
+        }
+        
+        .dx-spot-time {
+            font-weight: bold;
+            color: #495057;
+            min-width: 50px;
+            font-size: 0.9em;
+        }
+        
+        .dx-spot-spotter {
+            font-weight: 600;
+            color: #007bff;
+            min-width: 80px;
+            margin: 0 8px;
+        }
+        
+        .dx-spot-arrow {
+            color: #6c757d;
+            margin: 0 6px;
+        }
+        
+        .dx-spot-dx {
+            font-weight: 600;
+            color: #28a745;
+            min-width: 80px;
+            margin: 0 8px;
+        }
+        
+        .dx-spot-freq {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: 500;
+            min-width: 60px;
+            text-align: center;
+            margin: 0 8px;
+        }
+        
+        .dx-spot-comment {
+            flex: 1;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 0.9em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .cr7bin-call {
+             color: #dc3545 !important;
+             font-weight: bold;
+         }
+        
+        /* Mode sombre pour les spots DX */
+        body.dark-mode .dx-spot {
+            background: rgba(40, 40, 40, 0.8);
+            border-left-color: #667eea;
+        }
+        
+        body.dark-mode .dx-spot:hover {
+            background: rgba(50, 50, 50, 0.9);
+        }
+        
+        body.dark-mode .dx-spot-time {
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .dx-spot-spotter {
+            color: #667eea;
+        }
+        
+        body.dark-mode .dx-spot-dx {
+            color: #28a745;
+        }
+        
+        body.dark-mode .dx-spot-freq {
+            background: #495057;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .dx-spot-comment {
+            color: #adb5bd;
+        }
+        
+        body.dark-mode .ct7bin-call {
+             color: #ff6b6b !important;
+         }
+         
+         /* Section des spots DX - Pleine largeur */
+         #dx-spots-container {
+             width: 100% !important;
+             max-width: none !important;
+         }
+         
+         .dx-spots-section {
+             width: 100% !important;
+             max-width: none !important;
+         }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Basculer le mode sombre">
+        <i class="fas fa-moon" id="theme-icon"></i>
+    </button>
+    
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">
+                    <i class="fas fa-satellite-dish"></i>
+                    MUF Monitor - Ionosondes Espagnoles
+                </h1>
+            </div>
+        </div>
+
+        <!-- Bulles MUF -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card muf-card border-0 shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-map-marker-alt"></i> Roquetes (Ebre)</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <iframe id="roquetes-liquid" src="/liquid/roquetes" style="width: 100%; height: 280px; border: none;" scrolling="no"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card muf-card border-0 shadow">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-map-marker-alt"></i> Arenosillo</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <iframe id="arenosillo-liquid" src="/liquid/arenosillo" style="width: 100%; height: 280px; border: none;" scrolling="no"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card muf-card border-0 shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-calculator"></i> Moyenne</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <iframe id="moyenne-liquid" src="/liquid/moyenne" style="width: 100%; height: 280px; border: none;" scrolling="no"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statut et navigation -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <div class="alert alert-{{ 'danger' if data and data.status == 'STALE' else 'success' }} d-inline-block">
+                    <i class="fas fa-{{ 'exclamation-triangle' if data and data.status == 'STALE' else 'check-circle' }}"></i>
+                    <strong>Statut:</strong> {{ data.status if data else 'STALE' }}
+                    <span class="mx-2">|</span>
+                    <i class="fas fa-clock"></i>
+                    <strong>Dernière mise à jour:</strong> 
+                    <span id="last-update">{% if data %}{{ data.ts.strftime('%H:%M:%S UTC') }}{% else %}Jamais{% endif %}</span>
+                    <span class="mx-2">|</span>
+                    <div id="dx-spots-preview" class="d-inline-block">
+                        <i class="fas fa-satellite-dish"></i>
+                        <strong>10 derniers spots:</strong>
+                        <span id="dx-spots-loading">Chargement...</span>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="/dxcluster" class="btn btn-outline-primary">
+                        <i class="fas fa-satellite-dish"></i> DX Cluster Portugal
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section des 10 derniers spots DX -->
+        <div class="row mb-4 dx-spots-section">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-satellite-dish"></i> 10 Derniers Spots DX Portugal
+                            <small class="text-muted ms-2" id="dx-last-update">Dernière mise à jour: --:--:--</small>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="dx-spots-container">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-spinner fa-spin"></i> Chargement des spots DX...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Test de sauvegarde automatique - Modification test -->
+        <!-- Graphique -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-line"></i> Évolution MUF (60 minutes)</h5>
+                    </div>
+                    <div class="card-body">
+                        <iframe id="chart-frame" src="/chart" style="width: 100%; height: 450px; border: none;"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-refresh toutes les 5 minutes
+        const REFRESH_INTERVAL = 5 * 60 * 1000;
+
+        async function refreshData() {
+            try {
+                const response = await fetch('/api/muf/latest');
+                const data = await response.json();
+                
+                // Recharger les graphiques liquid avec le thème actuel
+                const timestamp = Date.now();
+                const isDarkModeRefresh = document.body.classList.contains('dark-mode');
+                const darkParam = isDarkModeRefresh ? '&dark=true' : '';
+                document.getElementById('roquetes-liquid').src = '/liquid/roquetes?t=' + timestamp + darkParam;
+                document.getElementById('arenosillo-liquid').src = '/liquid/arenosillo?t=' + timestamp + darkParam;
+                document.getElementById('moyenne-liquid').src = '/liquid/moyenne?t=' + timestamp + darkParam;
+                
+                // Mettre à jour l'horodatage
+                const date = new Date(data.ts);
+                document.getElementById('last-update').textContent = date.toLocaleTimeString('fr-FR', { timeZone: 'UTC' }) + ' UTC';
+                
+                // Recharger le graphique principal avec le thème actuel
+                const chartFrame = document.getElementById('chart-frame');
+                const isDarkModeChart = document.body.classList.contains('dark-mode');
+                const baseUrl = chartFrame.src.split('?')[0];
+                chartFrame.src = baseUrl + '?t=' + timestamp + (isDarkModeChart ? '&dark=true' : '');
+                
+                // Actualiser les spots DX
+                await refreshDXSpots();
+                
+            } catch (error) {
+                console.error('Erreur lors de l\'actualisation:', error);
+            }
+        }
+        
+        async function refreshDXSpots() {
+            try {
+                const response = await fetch('/api/dx/spots');
+                const data = await response.json();
+                
+                // Mettre à jour l'horodatage des spots DX
+                const lastUpdate = new Date(data.last_update);
+                document.getElementById('dx-last-update').textContent = 
+                    'Dernière mise à jour: ' + lastUpdate.toLocaleTimeString('fr-FR', { timeZone: 'UTC' }) + ' UTC';
+                
+                // Mettre à jour le preview dans la barre de statut
+                const previewElement = document.getElementById('dx-spots-loading');
+                if (data.spots && data.spots.length > 0) {
+                    previewElement.textContent = `${data.spots.length} spots trouvés`;
+                } else {
+                    previewElement.textContent = 'Aucun spot';
+                }
+                
+                // Afficher les spots dans la section dédiée
+                const container = document.getElementById('dx-spots-container');
+                
+                if (data.spots && data.spots.length > 0) {
+                    // Limiter à 10 spots
+                    const spots = data.spots.slice(0, 10);
+                    
+                    container.innerHTML = spots.map(spot => {
+                        const time = new Date(spot.time);
+                        const timeStr = time.toLocaleTimeString('fr-FR', { 
+                            hour: '2-digit', 
+                            minute: '2-digit',
+                            timeZone: 'UTC'
+                        });
+                        
+                        const isCR7BINSpotter = spot.spotter === 'CR7BIN';
+                         const isCR7BINDX = spot.dx_call === 'CR7BIN';
+                         
+                         const spotterClass = isCR7BINSpotter ? 'cr7bin-call' : '';
+                         const dxClass = isCR7BINDX ? 'cr7bin-call' : '';
+                        
+                        return `
+                            <div class="dx-spot">
+                                <div class="dx-spot-time">${timeStr}</div>
+                                <div class="dx-spot-spotter ${spotterClass}">${spot.spotter}</div>
+                                <div class="dx-spot-arrow">→</div>
+                                <div class="dx-spot-dx ${dxClass}">${spot.dx_call}</div>
+                                <div class="dx-spot-freq">${spot.frequency.toFixed(1)}</div>
+                                <div class="dx-spot-comment">${spot.comment || '-'}</div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center text-muted">
+                            <i class="fas fa-satellite-dish"></i>
+                            <p class="mb-0">Aucun spot DX portugais trouvé récemment</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Erreur lors de l\'actualisation des spots DX:', error);
+                document.getElementById('dx-spots-container').innerHTML = `
+                    <div class="text-center text-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p class="mb-0">Erreur lors du chargement des spots DX</p>
+                    </div>
+                `;
+                document.getElementById('dx-spots-loading').textContent = 'Erreur';
+            }
+        }
+
+
+
+        // Configurer l'actualisation automatique
+        setInterval(refreshData, REFRESH_INTERVAL);
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshData();
+            // Charger les spots DX immédiatement
+            refreshDXSpots();
+        });
+        
+        // Gestion du mode sombre
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('darkMode', 'disabled');
+            }
+            
+            // Recharger tous les graphiques avec le nouveau thème
+            const timestamp = Date.now();
+            const isDarkMode = body.classList.contains('dark-mode');
+            const darkParam = isDarkMode ? '&dark=true' : '';
+            
+            // Recharger le graphique principal
+            const chartFrame = document.getElementById('chart-frame');
+            const baseUrl = chartFrame.src.split('?')[0];
+            chartFrame.src = baseUrl + '?t=' + timestamp + darkParam;
+            
+            // Recharger les graphiques liquid
+            document.getElementById('roquetes-liquid').src = '/liquid/roquetes?t=' + timestamp + darkParam;
+            document.getElementById('arenosillo-liquid').src = '/liquid/arenosillo?t=' + timestamp + darkParam;
+            document.getElementById('moyenne-liquid').src = '/liquid/moyenne?t=' + timestamp + darkParam;
+        }
+        
+        // Charger la préférence de thème au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkMode = localStorage.getItem('darkMode');
+            const themeIcon = document.getElementById('theme-icon');
+            
+            if (darkMode === 'enabled') {
+                document.body.classList.add('dark-mode');
+                themeIcon.className = 'fas fa-sun';
+                
+                // Charger tous les graphiques avec le thème sombre
+                const timestamp = Date.now();
+                const darkParam = '&dark=true';
+                
+                // Charger le graphique principal
+                const chartFrame = document.getElementById('chart-frame');
+                const baseUrl = chartFrame.src.split('?')[0];
+                chartFrame.src = baseUrl + '?t=' + timestamp + darkParam;
+                
+                // Charger les graphiques liquid
+                document.getElementById('roquetes-liquid').src = '/liquid/roquetes?t=' + timestamp + darkParam;
+                document.getElementById('arenosillo-liquid').src = '/liquid/arenosillo?t=' + timestamp + darkParam;
+                document.getElementById('moyenne-liquid').src = '/liquid/moyenne?t=' + timestamp + darkParam;
+            }
+        });
+    </script>
+</body>
+</html>

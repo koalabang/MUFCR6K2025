@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DX Cluster - Stations Portugaises</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+        
+        .stats-row {
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .spots-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table thead {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .table thead th {
+            border: none;
+            font-weight: 600;
+            padding: 15px 12px;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-1px);
+        }
+        
+        .table tbody td {
+            padding: 12px;
+            vertical-align: middle;
+        }
+        
+        .callsign {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .portuguese-call {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .frequency {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .time-badge {
+            background: #6c757d;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .comment {
+            font-style: italic;
+            color: #6c757d;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #dee2e6;
+        }
+        
+        .ct1ehi-highlight {
+            background-color: #dc3545 !important;
+            color: white !important;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 15px;
+            color: #2c3e50;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            color: #2c3e50;
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .theme-toggle:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Mode sombre */
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        body.dark-mode .main-container {
+            background: rgba(30, 30, 30, 0.95);
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .header {
+            border-bottom: 2px solid #404040;
+        }
+        
+        body.dark-mode .header h1 {
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .header .subtitle {
+            color: #b0b0b0;
+        }
+        
+        body.dark-mode .spots-table {
+            background: #2a2a2a;
+        }
+        
+        body.dark-mode .table tbody tr:hover {
+            background-color: #3a3a3a;
+        }
+        
+        body.dark-mode .table tbody td {
+            color: #e0e0e0;
+            border-color: #404040;
+        }
+        
+        body.dark-mode .callsign {
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .frequency {
+            color: #b0b0b0;
+        }
+        
+        body.dark-mode .comment {
+            color: #b0b0b0;
+        }
+        
+        body.dark-mode .no-data {
+            color: #b0b0b0;
+        }
+        
+        body.dark-mode .no-data i {
+            color: #606060;
+        }
+        
+        body.dark-mode .back-btn {
+            background: rgba(50, 50, 50, 0.9);
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .back-btn:hover {
+            background: #404040;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .theme-toggle {
+            background: rgba(50, 50, 50, 0.9);
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .theme-toggle:hover {
+            background: #404040;
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Retour
+    </a>
+    
+    <button class="theme-toggle" onclick="toggleTheme()" title="Basculer le mode sombre">
+        <i class="fas fa-moon" id="theme-icon"></i>
+    </button>
+    
+    <div class="container-fluid">
+        <div class="main-container">
+            <div class="header">
+                <h1><i class="fas fa-satellite-dish"></i> DX Cluster Portugal</h1>
+                <p class="subtitle">Derniers spots impliquant des stations portugaises</p>
+            </div>
+            
+            <div class="row stats-row">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-spots">{{ spots|length }}</div>
+                        <div class="stat-label">Spots trouvés</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-number" id="portuguese-spotters">{{ portuguese_spotters }}</div>
+                        <div class="stat-label">Spotters portugais</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-number" id="portuguese-dx">{{ portuguese_dx }}</div>
+                        <div class="stat-label">Stations PT spottées</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3><i class="fas fa-list"></i> Derniers Spots</h3>
+                <div>
+                    <span class="text-muted me-3">Dernière mise à jour: <span id="last-update">{{ last_update.strftime('%H:%M:%S UTC') if last_update else 'N/A' }}</span></span>
+                    <button class="btn refresh-btn" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Actualiser
+                    </button>
+                </div>
+            </div>
+            
+            <div class="spots-table" id="spots-container">
+                {% if spots %}
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-clock"></i> Heure</th>
+                            <th><i class="fas fa-user"></i> Spotter</th>
+                            <th><i class="fas fa-arrow-right"></i></th>
+                            <th><i class="fas fa-radio"></i> Station DX</th>
+                            <th><i class="fas fa-wave-square"></i> Fréquence</th>
+                            <th><i class="fas fa-comment"></i> Commentaire</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for spot in spots %}
+                        <tr>
+                            <td>
+                                <span class="time-badge">{{ spot.time.strftime('%H:%M') }}</span>
+                            </td>
+                            <td>
+                                {% if spot.spotter == 'CT1EHI' %}
+                                    <span class="ct1ehi-highlight">{{ spot.spotter }}</span>
+                                {% elif spot.country_spotter == 'Portugal' %}
+                                    <span class="portuguese-call">{{ spot.spotter }}</span>
+                                {% else %}
+                                    <span class="callsign">{{ spot.spotter }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <i class="fas fa-arrow-right text-muted"></i>
+                            </td>
+                            <td>
+                                {% if spot.dx_call == 'CT1EHI' %}
+                                    <span class="ct1ehi-highlight">{{ spot.dx_call }}</span>
+                                {% elif spot.country_dx == 'Portugal' %}
+                                    <span class="portuguese-call">{{ spot.dx_call }}</span>
+                                {% else %}
+                                    <span class="callsign">{{ spot.dx_call }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="frequency">{{ "%.1f"|format(spot.frequency) }}</span>
+                            </td>
+                            <td>
+                                <span class="comment" title="{{ spot.comment }}">{{ spot.comment or '-' }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="no-data">
+                    <i class="fas fa-satellite-dish"></i>
+                    <h4>Aucun spot trouvé</h4>
+                    <p>Aucun spot impliquant des stations portugaises n'a été trouvé récemment.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const REFRESH_INTERVAL = 60000; // 1 minute
+        
+        async function refreshData() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            const originalContent = refreshBtn.innerHTML;
+            
+            // Afficher l'état de chargement
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualisation...';
+            refreshBtn.disabled = true;
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 secondes timeout
+                
+                const response = await fetch('/api/dx/spots', {
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    // Recharger la page pour afficher les nouvelles données
+                    window.location.reload();
+                } else {
+                    console.warn('Réponse non-OK:', response.status);
+                    // Ne pas afficher d'erreur pour les timeouts des sources externes
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    console.warn('Timeout lors de l\'actualisation des données DX');
+                } else {
+                    console.error('Erreur lors de l\'actualisation:', error);
+                }
+                // Ne pas afficher d'alert pour éviter de déranger l'utilisateur
+            } finally {
+                refreshBtn.innerHTML = originalContent;
+                refreshBtn.disabled = false;
+            }
+        }
+        
+        // Actualisation automatique
+        setInterval(() => {
+            refreshData();
+        }, REFRESH_INTERVAL);
+        
+        // Mettre à jour l'heure d'affichage
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('fr-FR', { timeZone: 'UTC' }) + ' UTC';
+            document.getElementById('last-update').textContent = timeString;
+        }
+        
+        // Mettre à jour l'heure toutes les secondes
+        setInterval(updateLastUpdateTime, 1000);
+        
+        // Gestion du mode sombre
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        }
+        
+        // Charger la préférence de thème au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkMode = localStorage.getItem('darkMode');
+            const themeIcon = document.getElementById('theme-icon');
+            
+            if (darkMode === 'enabled') {
+                document.body.classList.add('dark-mode');
+                themeIcon.className = 'fas fa-sun';
+            }
+        });
+    </script>
+</body>
+</html>
