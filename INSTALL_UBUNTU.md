@@ -286,19 +286,55 @@ sudo netstat -tlnp | grep :8080
 
 ### Problèmes courants
 
-3. **Erreur 203/EXEC - Service ne démarre pas**
+3. **Erreur 203/EXEC - Service ne démarre pas ("Permission denied" sur uvicorn)**
+
+   **Solution rapide pour "Permission denied" sur uvicorn :**
+
    ```bash
-   # Vérifier les permissions du fichier uvicorn
+   # Diagnostic initial
    ls -la /opt/mufmonitor/venv/bin/uvicorn
+   file /opt/mufmonitor/venv/bin/uvicorn
+
+   # Correction des permissions (solution la plus courante)
+   sudo chmod +x /opt/mufmonitor/venv/bin/*
+   sudo chown -R mufmonitor:mufmonitor /opt/mufmonitor
+
+   # Test immédiat
+   sudo -u mufmonitor /opt/mufmonitor/venv/bin/uvicorn --version
+   ```
+
+   **Si le problème persiste, diagnostic complet :**
+
+   ```bash
+   # Vérifier les permissions sur tous les binaires de l'environnement virtuel
+   ls -la /opt/mufmonitor/venv/bin/uvicorn
+   sudo chmod +x /opt/mufmonitor/venv/bin/*
    sudo chmod +x /opt/mufmonitor/venv/bin/uvicorn
+   sudo chmod +x /opt/mufmonitor/venv/bin/python
+   sudo chmod +x /opt/mufmonitor/venv/bin/python3
    
    # Vérifier que l'environnement virtuel est correct
    sudo -u mufmonitor /opt/mufmonitor/venv/bin/python --version
    
+   # Tester uvicorn spécifiquement
+   sudo -u mufmonitor /opt/mufmonitor/venv/bin/uvicorn --version
+   
+   # Si uvicorn n'est pas exécutable, le réinstaller
+   if ! sudo -u mufmonitor /opt/mufmonitor/venv/bin/uvicorn --version 2>/dev/null; then
+       echo "Réinstallation d'uvicorn..."
+       sudo -u mufmonitor /opt/mufmonitor/venv/bin/pip uninstall -y uvicorn
+       sudo -u mufmonitor /opt/mufmonitor/venv/bin/pip install uvicorn[standard]
+       sudo chmod +x /opt/mufmonitor/venv/bin/uvicorn
+   fi
+   
    # Recréer l'environnement virtuel si nécessaire
-   sudo rm -rf /opt/mufmonitor/venv
-   sudo -u mufmonitor python3 -m venv /opt/mufmonitor/venv
-   sudo -u mufmonitor /opt/mufmonitor/venv/bin/pip install -r /opt/mufmonitor/requirements.txt
+   if ! sudo -u mufmonitor /opt/mufmonitor/venv/bin/python --version 2>/dev/null; then
+       echo "Recréation de l'environnement virtuel..."
+       sudo rm -rf /opt/mufmonitor/venv
+       sudo -u mufmonitor python3 -m venv /opt/mufmonitor/venv
+       sudo -u mufmonitor /opt/mufmonitor/venv/bin/pip install -r /opt/mufmonitor/requirements.txt
+       sudo chmod +x /opt/mufmonitor/venv/bin/*
+   fi
    
    # Redémarrer le service
    sudo systemctl daemon-reload
